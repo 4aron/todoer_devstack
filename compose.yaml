@@ -1,0 +1,59 @@
+# Local-only dev stack for todoer. NOT used in production.
+# Brings up Postgres now; todoer_be and web are added once they have Dockerfiles.
+
+services:
+  db:
+    image: postgres:18-alpine     # pin to match production's Postgres version
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "docker", "-U", "docker"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: docker
+    volumes:
+      - pgdata:/var/lib/postgresql      # postgres:18+ wants the mount here, not /data
+    ports:
+      - 5433:5432       # host 5433 (5432 is often taken by another local Postgres); container still 5432
+
+  # Applies the SQL migrations from todoer_be/sql_mm against the db.
+  # Run on demand:  docker compose run --rm migrate up
+  # Roll back one:  docker compose run --rm migrate down 1
+  migrate:
+    image: migrate/migrate:latest
+    profiles: ["tools"]
+    volumes:
+      - ../todoer_be/sql_mm:/migrations:ro
+    entrypoint:
+      - migrate
+      - -path
+      - /migrations
+      - -database
+      - postgres://docker:password@db:5432/docker?sslmode=disable
+    command: ["up"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  todoer_be:
+    build: ../todoer_be       # reads its own config.yaml (db host = "db" on this network)
+    ports:
+      - 8080:8080
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # --- Added later, once it has a Dockerfile in its own repo ---
+  #
+  # web:
+  #   build: ../todoer_web      # nginx for a static SPA, or the framework's server
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - todoer_be
+
+volumes:
+  pgdata:
