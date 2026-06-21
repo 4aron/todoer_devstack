@@ -5,15 +5,15 @@ services:
   db:
     image: postgres:18-alpine     # pin to match production's Postgres version
     healthcheck:
-      test: ["CMD", "pg_isready", "-q", "-d", "docker", "-U", "docker"]
+      test: ["CMD", "pg_isready", "-q", "-d", "todoer", "-U", "todoer"]
       timeout: 45s
       interval: 10s
       retries: 10
     restart: unless-stopped
     environment:
-      POSTGRES_USER: docker
+      POSTGRES_USER: todoer
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: docker
+      POSTGRES_DB: todoer
     volumes:
       - pgdata:/var/lib/postgresql      # postgres:18+ wants the mount here, not /data
     ports:
@@ -32,7 +32,7 @@ services:
       - -path
       - /migrations
       - -database
-      - postgres://docker:password@db:5432/docker?sslmode=disable
+      - postgres://todoer:password@db:5432/todoer?sslmode=disable
     command: ["up"]
     depends_on:
       db:
