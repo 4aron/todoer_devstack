@@ -1,0 +1,3 @@
+# Local secrets for the dev stack — never commit. See .env.example for the template.
+.env
+oauth_details.txt

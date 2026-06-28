@@ -45,6 +45,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      # Google OAuth client secret — injected from the gitignored .env, never baked
+      # into the image. The server refuses to start if this is empty.
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    logging:                  # rotate logs so they don't grow unbounded; avoids in-place
+      driver: json-file       # truncation, which strands a live `docker compose logs -f`
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # --- Added later, once it has a Dockerfile in its own repo ---
   #

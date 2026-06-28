@@ -1,0 +1,1 @@
+docker compose exec db psql -U todoer postgres
