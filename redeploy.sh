@@ -17,3 +17,4 @@ for _ in $(seq 1 30); do
 done
 echo "todoer_be did not become healthy — check: docker compose logs todoer_be" >&2
 exit 1
+
